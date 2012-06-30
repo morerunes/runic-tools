@@ -25,9 +25,7 @@ BigFile readBigFile(char* filename) {
 
 	//Read Header
 	fread(header, 4, 4, in);
-	if (DEBUG) {
-		printHead(*header);
-	}
+	if (DEBUG) { printHead(header); }
 
 	BigFile *bigfile = malloc(sizeof(BigFile));
 	bigfile->header = *header;
@@ -42,7 +40,7 @@ BigFile readBigFile(char* filename) {
 		printf("\nThere are %d banks.\n", bigfile->numBanks);
 	}
 
-	BankHead *bankheads = calloc(bigfile->numBanks, sizeof(BankHead));
+	BankHead *bankheads = malloc(bigfile->numBanks * sizeof(BankHead));
 
 	//Read Bank Headers
 	int i = 0;
@@ -52,14 +50,25 @@ BigFile readBigFile(char* filename) {
 		i++;
 	}
 
-	if (DEBUG) {
+	if (DEBUG) { // Print debug info
 		for (i = 0; i < bigfile->numBanks; i++) {
 			printBankHead(&bankheads[i]);
 		}
 	}
 
 	//Read Bank Data
-	Bank *banks = malloc(bigfile->numBanks * sizeof(Bank));
+	bigfile->banks = malloc(bigfile->numBanks * sizeof(Bank));
+
+	//Distribute bank headers
+	for (i = 0; i < bigfile->numBanks; i++) {
+		bigfile->banks[i].header = bankheads[i];
+	}
+
+	for (i = 0; i < /*bigfile->numBanks*/1; i++) { // For every bank, read bank
+		fseek(in, bigfile->banks[i].header.indexOffset, SEEK_SET); // Seek to file index header
+		fread(&(bigfile->banks[i].fileSet.header), 4, 3, in); // Read file index header
+		if (DEBUG) { printFileIndexHead(&(bigfile->banks[i].fileSet.header)); }
+	}
 
 	return *bigfile;
 }
