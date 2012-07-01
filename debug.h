@@ -10,4 +10,5 @@
 void printHead(Head *header);
 void printBankHead(BankHead *header);
 void printFileIndexHead(FileIndexHead *header);
+void printFileIndex(FileIndex *index);
 #endif //RUNE_DEBUG_H

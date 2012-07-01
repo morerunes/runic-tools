@@ -14,6 +14,11 @@
 short DEBUG = 1;
 
 BigFile readBigFile(char* filename) {
+	//-- Loop Vars --//
+	int i = 0;
+	int j = 0;
+	int k = 0;
+
 	//-- Begin Reading File --//
 	FILE *in = fopen(filename, "r");
 	if (in == NULL) {
@@ -25,7 +30,9 @@ BigFile readBigFile(char* filename) {
 
 	//Read Header
 	fread(header, 4, 4, in);
-	if (DEBUG) { printHead(header); }
+	if (DEBUG) {
+		printHead(header);
+	}
 
 	BigFile *bigfile = malloc(sizeof(BigFile));
 	bigfile->header = *header;
@@ -43,7 +50,6 @@ BigFile readBigFile(char* filename) {
 	BankHead *bankheads = malloc(bigfile->numBanks * sizeof(BankHead));
 
 	//Read Bank Headers
-	int i = 0;
 	while (i < bigfile->numBanks) {
 		freadNTS(bankheads[i].bankName, 254, in);
 		fread(&(bankheads[i].bankID), 4, 5, in);
@@ -64,10 +70,23 @@ BigFile readBigFile(char* filename) {
 		bigfile->banks[i].header = bankheads[i];
 	}
 
+	//Inner Loop Var Declarations
+	INT numFiles;
+
 	for (i = 0; i < /*bigfile->numBanks*/1; i++) { // For every bank, read bank
 		fseek(in, bigfile->banks[i].header.indexOffset, SEEK_SET); // Seek to file index header
-		fread(&(bigfile->banks[i].fileSet.header), 4, 3, in); // Read file index header
-		if (DEBUG) { printFileIndexHead(&(bigfile->banks[i].fileSet.header)); }
+		fread(&(bigfile->banks[i].fileSet.header), 4, 1, in); // Get number of file types
+
+		bigfile->banks[i].fileSet.header.fileTypes = malloc(
+				bigfile->banks[i].fileSet.header.numFileTypes
+						* sizeof(FileType)); // Allocate memory for file types list
+
+		for (j = 0; j < bigfile->banks[i].fileSet.header.numFileTypes; j++) {
+			fread(&(bigfile->banks[i].fileSet.header.fileTypes[j]), 4, 2, in);
+		}
+
+		// You have just read the file types, now read all of the file headers
+
 	}
 
 	return *bigfile;

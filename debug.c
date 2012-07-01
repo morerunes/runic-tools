@@ -24,3 +24,18 @@ void printFileIndexHead(FileIndexHead *header) {
 	printf("File Type:\t\t%d\n", header->fileType);
 	printf("Number of Files:\t%d\n", header->numFiles);
 }
+
+void printFileIndex(FileIndex *index) {
+	printf("\nFile Index Info:\n\n");
+	printf("Magic Number:\t%d\n", index->magicNumber);
+	printf("File ID:\t%d\n", index->fileID);
+	printf("File Type:\t%d\n", index->fileType);
+	printf("File Size:\t%d\n", index->fileSize);
+	printf("File Start:\t%d\n", index->fileStart);
+	printf("devFile Type:\t%d\n", index->fileTypeDev);
+	printf("File Name:\t%s\n", index->fileName);
+	printf("File CRC:\t%d\n", index->crc);
+	printf("NumSrcFiles:\t%d\n", index->numSrcFiles);
+	printf("SrcFile Name:\t%s\n", index->srcName);
+	printf("SubHead Size:\t%d\n", index->subHeaderSize);
+}
