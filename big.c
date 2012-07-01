@@ -85,8 +85,9 @@ BigFile readBigFile(char* filename) {
 			fread(&(bigfile->banks[i].fileSet.header.fileTypes[j]), 4, 2, in);
 		}
 
-		// You have just read the file types, now read all of the file headers
-
+		if (DEBUG) {
+			printFileIndexHead(&(bigfile->banks[i].fileSet.header));
+		}
 	}
 
 	return *bigfile;
