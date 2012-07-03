@@ -30,6 +30,15 @@ BigFile readBigFile(char* filename) {
 
 	//Read Header
 	fread(header, 4, 4, in);
+
+	if ((header->bigb[0] != 'B') && (header->bigb[1] != 'I')
+			&& (header->bigb[2] != 'G') && (header->bigb[3] != 'B')) {
+		printf("File is not a BIGB file, exiting!");
+		free(header);
+		fclose(in);
+		exit(EXIT_FAILURE);
+	}
+
 	if (DEBUG) {
 		printHead(header);
 	}
