@@ -42,6 +42,10 @@ void printFileIndex(FileIndex *index) {
 	printf("File Name:\t%s\n", index->fileName);
 	printf("File CRC:\t%u\n", index->crc);
 	printf("NumSrcFiles:\t%u\n", index->numSrcFiles);
-	printf("SrcFile Name:\t%s\n", index->srcName);
+
+	for (int i = 0; i < index->numSrcFiles; i++) {
+		printf("devName:\t%s\n", index->devFiles[i].srcName);
+	}
+
 	printf("SubHead Size:\t%u\n", index->subHeaderSize);
 }

@@ -81,6 +81,11 @@ typedef union {
 } Subhead;
 
 typedef struct {
+	INT srcNameLength;
+	CHAR* srcName;
+} DevFile;
+
+typedef struct {
 	INT magicNumber;
 	INT fileID;
 	INT fileType;
@@ -93,8 +98,8 @@ typedef struct {
 	CHAR* fileName;
 	INT crc;
 	INT numSrcFiles;
-	INT srcNameLength;
-	CHAR* srcName;
+	DevFile* devFiles;
+
 	/* END DEV INFO */
 
 	INT subHeaderSize;
