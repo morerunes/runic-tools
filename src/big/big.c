@@ -80,7 +80,7 @@ BigFile readBigFile(char* filename) {
 	}
 
 	//Inner Loop Var Declarations
-	INT numFiles;
+	INT numFiles = 0;
 
 	for (i = 0; i < /*bigfile->numBanks*/1; i++) { // For every bank, read bank
 		fseek(in, bigfile->banks[i].header.indexOffset, SEEK_SET); // Seek to file index header
@@ -90,12 +90,70 @@ BigFile readBigFile(char* filename) {
 				bigfile->banks[i].fileSet.header.numFileTypes
 						* sizeof(FileType)); // Allocate memory for file types list
 
+		// Read file types
 		for (j = 0; j < bigfile->banks[i].fileSet.header.numFileTypes; j++) {
 			fread(&(bigfile->banks[i].fileSet.header.fileTypes[j]), 4, 2, in);
+			numFiles += bigfile->banks[i].fileSet.header.fileTypes[j].numFiles;
 		}
 
 		if (DEBUG) {
 			printFileIndexHead(&(bigfile->banks[i].fileSet.header));
+		}
+
+		printf("1");
+
+		// Allocate memory for files
+		bigfile->banks[i].fileSet.files = malloc(sizeof(FileIndex) * numFiles);
+
+		printf("2");
+
+		// File index read loop
+		for (j = 0; j < 10; j++) {
+			// Read magic num through filename length
+			fread(&(bigfile->banks[i].fileSet.files[j].magicNumber), 4, 7, in);
+
+			// Read file name
+			bigfile->banks[i].fileSet.files[j].fileName = malloc(
+					bigfile->banks[i].fileSet.files[j].nameLength + 1);
+			fread(bigfile->banks[i].fileSet.files[j].fileName,
+					bigfile->banks[i].fileSet.files[j].nameLength, 1, in);
+			bigfile->banks[i].fileSet.files[j].fileName[bigfile->banks[i].fileSet.files[j].nameLength] =
+					'\0';
+
+			// Read crc through pathname length
+			fread(&(bigfile->banks[i].fileSet.files[j].crc), 4, 3, in);
+
+			// Read full path name
+			bigfile->banks[i].fileSet.files[j].srcName = malloc(
+					bigfile->banks[i].fileSet.files[j].srcNameLength + 1);
+			fread(bigfile->banks[i].fileSet.files[j].srcName,
+					bigfile->banks[i].fileSet.files[j].srcNameLength, 1, in);
+			bigfile->banks[i].fileSet.files[j].srcName[bigfile->banks[i].fileSet.files[j].srcNameLength] =
+					'\0';
+
+			// Read sub-header
+			fread(&(bigfile->banks[i].fileSet.files[j].subHeaderSize), 4, 1, in);
+
+			if (DEBUG) {
+				printFileIndex(&(bigfile->banks[i].fileSet.files[j]));
+			}
+
+			// Read sub-header according to dev-file type attribute
+			switch(bigfile->banks[i].fileSet.files[j].fileTypeDev) {
+				case BBMFILE:
+					//TODO
+//					break;
+				case TGAFILE:
+					//TODO
+//					break;
+				case BBAFILE:
+					//TODO
+//					break;
+				default:
+					printf("Unknown file type, skipping...");
+					fseek(in, bigfile->banks[i].fileSet.files[j].subHeaderSize, SEEK_CUR);
+					break;
+			}
 		}
 	}
 

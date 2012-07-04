@@ -22,26 +22,26 @@ void printBankHead(BankHead *header) {
 
 void printFileIndexHead(FileIndexHead *header) {
 	printf("\nFile Index Header Info:\n");
-	printf("Number of File Types:\t%d\n\n", header->numFileTypes);
+	printf("Number of File Types:\t%u\n\n", header->numFileTypes);
 	printf("File Type - (Number of Files)\n");
 	int i;
-	for (i = 0; i < header->numFileTypes; i++) {
-		printf("%d - (%d)\n", header->fileTypes[i].fileType,
+	for (i = 0; i < (header->numFileTypes); i++) {
+		printf("%u - (%u)\n", header->fileTypes[i].fileType,
 				header->fileTypes[i].numFiles);
 	}
 }
 
 void printFileIndex(FileIndex *index) {
 	printf("\nFile Index Info:\n\n");
-	printf("Magic Number:\t%d\n", index->magicNumber);
-	printf("File ID:\t%d\n", index->fileID);
-	printf("File Type:\t%d\n", index->fileType);
-	printf("File Size:\t%d\n", index->fileSize);
-	printf("File Start:\t%d\n", index->fileStart);
-	printf("devFile Type:\t%d\n", index->fileTypeDev);
+	printf("Magic Number:\t%u\n", index->magicNumber);
+	printf("File ID:\t%u\n", index->fileID);
+	printf("File Type:\t%u\n", index->fileType);
+	printf("File Size:\t%u\n", index->fileSize);
+	printf("File Start:\t%u\n", index->fileStart);
+	printf("devFile Type:\t%u\n", index->fileTypeDev);
 	printf("File Name:\t%s\n", index->fileName);
-	printf("File CRC:\t%d\n", index->crc);
-	printf("NumSrcFiles:\t%d\n", index->numSrcFiles);
+	printf("File CRC:\t%u\n", index->crc);
+	printf("NumSrcFiles:\t%u\n", index->numSrcFiles);
 	printf("SrcFile Name:\t%s\n", index->srcName);
-	printf("SubHead Size:\t%d\n", index->subHeaderSize);
+	printf("SubHead Size:\t%u\n", index->subHeaderSize);
 }

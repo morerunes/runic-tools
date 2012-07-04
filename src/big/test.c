@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-	BigFile bigFile = readBigFile("files/graphics.big");
+	BigFile bigFile = readBigFile("/home/aaron/big-files/graphics.big");
 
 	return 0;
 }

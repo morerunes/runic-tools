@@ -11,6 +11,11 @@
 
 //-- Type Defs --//
 
+// dev file-type macros
+#define BBMFILE 2926088593
+#define BBAFILE 1940626445
+#define TGAFILE 2089624516
+
 // primitive aliases
 typedef uint32_t INT;
 typedef uint16_t SHORT;
