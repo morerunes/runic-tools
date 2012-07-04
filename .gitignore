@@ -14,3 +14,6 @@
 # Binary Files
 *.bin
 *.big
+
+# Project Files
+*.*project
