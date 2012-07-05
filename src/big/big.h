@@ -120,6 +120,8 @@ typedef struct {
 } Bank;
 
 typedef struct {
+	char *filename;
+
 	Head header;
 
 	INT numBanks;
@@ -127,7 +129,8 @@ typedef struct {
 } BigFile;
 
 //-- Function Prototypes --//
-BigFile readBigFile(char* filename);
+BigFile* readBigFile(char* filename);
+short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace);
 void saveBigFile(char* filename, BigFile file);
 void destroyBigFile(BigFile *bigfile);
 

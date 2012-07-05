@@ -12,4 +12,5 @@ void printBankHead(BankHead *header);
 void printFileIndexHead(FileIndexHead *header);
 void printFileIndex(FileIndex *index);
 void printMeshSHead(MeshSHead *subhead);
+void printTexSHead(TexSHead *subhead);
 #endif //RUNE_DEBUG_H

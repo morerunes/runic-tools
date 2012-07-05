@@ -7,21 +7,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "big.h"
 #include "debug.h"
 #include "runeio.h"
 
 short DEBUG = 1;
 
-BigFile readBigFile(char* filename) {
+BigFile* readBigFile(char* filename) {
+	BigFile *bigfile = malloc(sizeof(BigFile));
+	Head *header = &(bigfile->header);
+
+	bigfile->filename = filename;
+
 	//-- Begin Reading File --//
 	FILE *in = fopen(filename, "rb");
 	if (in == NULL) {
 		perror("Error opening file!");
 		exit(EXIT_FAILURE);
 	}
-
-	Head *header = malloc(sizeof(Head));
 
 	//Read Header
 	fread(header, 4, 4, in);
@@ -37,7 +41,7 @@ BigFile readBigFile(char* filename) {
 		printHead(header);
 	}
 
-	BigFile *bigfile = malloc(sizeof(BigFile));
+
 	bigfile->header = *header;
 
 	//Get Num Bank Headers
@@ -166,8 +170,12 @@ BigFile readBigFile(char* filename) {
 					printMeshSHead(&(currentFile->subHeader.meshSHeader));
 				}
 			} else if (currentFile->subHeaderSize == 34) {
-				printf("Textures not yet implemented, skipping...\n");
-				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
+				//-- Read DDS Subhead --//
+				fread(&(currentFile->subHeader.meshSHeader), 2, 17, in);
+				
+				if (DEBUG) {
+					printTexSHead(&(currentFile->subHeader.texSHeader));
+				}
 			} else {
 				printf("Unknown file type, skipping...");
 				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
@@ -175,7 +183,85 @@ BigFile readBigFile(char* filename) {
 		}
 	}
 
-	return *bigfile;
+	fclose(in);
+
+	return bigfile;
+}
+
+/* exportFileIndex(BigFile *big, INT bank, INT fileID, short replace)
+ *
+ * This function will export the file with the id specified from the bank specified
+ * No conversion will take place, it will simply export the binary format present in the big file
+ *
+ * Returns 0 if exported correctly, 1 if file already existed and replace == 0, 2 if there was another IO error
+ */
+
+short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
+	//-- Read Data --//
+	FILE *in = fopen(big->filename, "rb");
+
+	if (in == NULL) {
+		perror("Error opening file!");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("Opened %s for reading\n", big->filename);
+
+	int offset = big->banks[bank].fileSet.files[fileID - 1].fileStart;
+	int size = big->banks[bank].fileSet.files[fileID - 1].fileSize;
+	char *pathname = "output";
+	char *outputFileName = malloc(strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName) + 1);
+	strcpy(outputFileName, pathname);
+	strcat(outputFileName, big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName);
+
+	for (int i = 0; i < strlen(outputFileName); i++) {
+		if (outputFileName[i] == '\\') {
+			outputFileName[i] = '/';
+		}
+	}
+
+	char *buffer = malloc(size);
+
+	fseek(in, offset, SEEK_SET);
+	fread(buffer, size, 1, in);
+
+	fclose(in);
+
+	printf("File Read\n");
+
+	//-- Write Data --//
+	FILE *out = fopen(outputFileName, "rb");
+
+	printf("Writing to file %s\n", outputFileName);
+
+	if (out != NULL) {
+		if (replace) {
+			printf("Output file exists, overwriting...");
+			fclose(out); // close, then re-open for writing
+		} else {
+			printf("The output file already exists, aborting!");
+			fclose(out);
+			return 1;
+		}
+	}
+
+	out = fopen(outputFileName, "wb");
+
+	if (out == NULL) {
+		printf("IO Error! Cannot open new file for writing!");
+	}
+
+	fflush(stdout);
+
+	if (fwrite(buffer, 1, size, out) != size) {
+		printf("Error writing file!\n");
+	}
+
+	fclose(out);
+
+	printf("File Successfully Exported!");
+
+	return 0;
 }
 
 void saveBigFile(char* filename, BigFile file) {

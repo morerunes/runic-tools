@@ -59,3 +59,22 @@ void printMeshSHead(MeshSHead *subhead) {
 		printf("\t%d:\t%u\n", p, subhead->textureID[p]);
 	}
 }
+
+void printTexSHead(TexSHead *subhead) {
+	printf("\nTexture Sub-Header\n");
+	printf("Width:\t%u\n", subhead->width);
+	printf("Height:\t%u\n", subhead->height);
+	printf("Depth:\t%u\n", subhead->depth);
+	printf("Frame Width:\t%u\n", subhead->frameWidth);
+	printf("Frame Height:\t%u\n", subhead->frameHeight);
+	printf("Frame Count:\t%u\n", subhead->frameCount);
+	printf("DXT Compression:\t%u\n", subhead->dxt);
+	printf("Unknown:\t%u\n", subhead->unknown0);
+	printf("Alpha:\t%u\n", subhead->numAlphaChannels);
+	printf("MipMaps:\t%u\n", subhead->numMipMaps);
+	printf("Unknown:\t%u\n", subhead->unknown1);
+	printf("Top MipMap Size:\t%u\n", subhead->topMipmapSize);
+	printf("Top MipMap Compressed Size:\t%u\n", subhead->topMipmapCompressedSize);
+	printf("DXT Again?:\t%u\n", subhead->unknown2);
+	printf("Unknown:\t%u\n", subhead->unknown3);
+}
