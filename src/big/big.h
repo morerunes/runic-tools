@@ -10,12 +10,6 @@
 #include <stdint.h>
 
 //-- Type Defs --//
-
-// dev file-type macros
-#define BBMFILE 2926088593
-#define BBAFILE 1940626445
-#define TGAFILE 2089624516
-
 // primitive aliases
 typedef uint32_t INT;
 typedef uint16_t SHORT;
@@ -51,10 +45,10 @@ typedef struct {
 	INT physicsMesh;
 	float bbmHead[10];
 	INT numLODs;
-	INT * LODSize;
-	INT padding;
+	INT *LODSize;
+	INT *padding;
 	INT numTextures;
-	INT * textureID;
+	INT *textureID;
 } MeshSHead;
 
 typedef struct {

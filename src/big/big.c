@@ -72,10 +72,14 @@ BigFile readBigFile(char* filename) {
 		bigfile->banks[i].header = bankheads[i];
 	}
 
-	//Inner Loop Var Declarations
-	INT numFiles = 0;
+	for (int i = 0; i < bigfile->numBanks; i++) { // For every bank, read bank
 
-	for (int i = 0; i < /*bigfile->numBanks*/1; i++) { // For every bank, read bank
+		if (DEBUG) {
+			printf("\n-- Bank #%d --\n", i + 1);
+		}
+
+		INT numFiles = 0;
+
 		fseek(in, bigfile->banks[i].header.indexOffset, SEEK_SET); // Seek to file index header
 		fread(&(bigfile->banks[i].fileSet.header), 4, 1, in); // Get number of file types
 
@@ -92,15 +96,11 @@ BigFile readBigFile(char* filename) {
 			printFileIndexHead(&(bigfile->banks[i].fileSet.header));
 		}
 
-		printf("1");
-
 		// Allocate memory for files
 		bigfile->banks[i].fileSet.files = malloc(sizeof(FileIndex) * numFiles);
 
-		printf("2");
-
 		// File index read loop
-		for (int j = 0; j < 20; j++) {
+		for (int j = 0; j < numFiles; j++) {
 			FileIndex *currentFile = &(bigfile->banks[i].fileSet.files[j]);
 
 			// Read magic num through filename length
@@ -136,20 +136,41 @@ BigFile readBigFile(char* filename) {
 			}
 
 			// Read sub-header according to dev-file type attribute
-			switch (currentFile->fileTypeDev) {
-			case BBMFILE:
-				//TODO
-//					break;
-			case TGAFILE:
-				//TODO
-//					break;
-			case BBAFILE:
-				//TODO
-//					break;
-			default:
+			if (currentFile->subHeaderSize == 0) {
+				if (DEBUG) {
+					printf("No Sub-Header");
+				}
+			} else if (currentFile->subHeaderSize == 4) {
+				printf("Dialogue not yet implemented, skipping...\n");
+				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
+			} else if (currentFile->subHeaderSize == 24) {
+				printf("Animations not yet implemented, skipping...\n");
+				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
+			} else if (currentFile->subHeaderSize > 45) {
+				//-- Read BBM Sub-Header --//
+				fread(&(currentFile->subHeader.meshSHeader.physicsMesh), 4, 12, in);
+
+				currentFile->subHeader.meshSHeader.LODSize = malloc(4 * currentFile->subHeader.meshSHeader.numLODs);
+				currentFile->subHeader.meshSHeader.padding = malloc(4 * currentFile->subHeader.meshSHeader.numLODs);
+
+				fread(&(currentFile->subHeader.meshSHeader.LODSize), 4, currentFile->subHeader.meshSHeader.numLODs, in);
+				fread(&(currentFile->subHeader.meshSHeader.padding), 4, currentFile->subHeader.meshSHeader.numLODs, in);
+				fread(&(currentFile->subHeader.meshSHeader.numTextures), 4, 1, in);
+
+				currentFile->subHeader.meshSHeader.textureID = malloc(
+						4 * currentFile->subHeader.meshSHeader.numTextures);
+				fread(currentFile->subHeader.meshSHeader.textureID, 4, currentFile->subHeader.meshSHeader.numTextures,
+						in);
+
+				if (DEBUG) {
+					printMeshSHead(&(currentFile->subHeader.meshSHeader));
+				}
+			} else if (currentFile->subHeaderSize == 34) {
+				printf("Textures not yet implemented, skipping...\n");
+				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
+			} else {
 				printf("Unknown file type, skipping...");
 				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
-				break;
 			}
 		}
 	}

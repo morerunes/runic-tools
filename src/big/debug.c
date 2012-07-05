@@ -6,17 +6,14 @@
 #include "big.h"
 void printHead(Head *header) {
 	printf("Header:\t\t\t");
-	printf(
-			"%c%c%c%c\nVersion:\t\t%u\nBank Headers Offset:\t%u\nUnknown:\t\t%u\n",
-			header->bigb[0], header->bigb[1], header->bigb[2], header->bigb[3],
-			header->version, header->bankHeadOffset, header->unknown);
+	printf("%c%c%c%c\nVersion:\t\t%u\nBank Headers Offset:\t%u\nUnknown:\t\t%u\n", header->bigb[0], header->bigb[1],
+			header->bigb[2], header->bigb[3], header->version, header->bankHeadOffset, header->unknown);
 }
 
 void printBankHead(BankHead *header) {
-	printf("\nBank Name:\t%s\nBank ID:\t%u\n", header->bankName,
-			header->bankID);
-	printf("NumEntries:\t%u\nIndexStart:\t%u\nIndexSize:\t%u\n",
-			header->numEntries, header->indexOffset, header->indexSize);
+	printf("\nBank Name:\t%s\nBank ID:\t%u\n", header->bankName, header->bankID);
+	printf("NumEntries:\t%u\nIndexStart:\t%u\nIndexSize:\t%u\n", header->numEntries, header->indexOffset,
+			header->indexSize);
 	printf("Block Size:\t%u\n", header->blockSize);
 }
 
@@ -26,8 +23,7 @@ void printFileIndexHead(FileIndexHead *header) {
 	printf("File Type - (Number of Files)\n");
 	int i;
 	for (i = 0; i < (header->numFileTypes); i++) {
-		printf("%u - (%u)\n", header->fileTypes[i].fileType,
-				header->fileTypes[i].numFiles);
+		printf("%u - (%u)\n", header->fileTypes[i].fileType, header->fileTypes[i].numFiles);
 	}
 }
 
@@ -48,4 +44,18 @@ void printFileIndex(FileIndex *index) {
 	}
 
 	printf("SubHead Size:\t%u\n", index->subHeaderSize);
+}
+
+void printMeshSHead(MeshSHead *subhead) {
+	printf("\nMesh Sub-Header\n");
+	printf("\nPhysMesh:\t%u\n", subhead->physicsMesh);
+	printf("BBM Head:\t[ [%f, %f, %f, %f, %f]\n\t\t  [%f, %f, %f, %f, %f] ]\n", subhead->bbmHead[0],
+			subhead->bbmHead[1], subhead->bbmHead[2], subhead->bbmHead[3], subhead->bbmHead[4], subhead->bbmHead[5],
+			subhead->bbmHead[6], subhead->bbmHead[7], subhead->bbmHead[8], subhead->bbmHead[9]);
+	printf("Num LODs:\t%u\n", subhead->numLODs);
+	printf("Textures:\n");
+
+	for (int p = 0; p < subhead->numTextures; p++) {
+		printf("\t%d:\t%u\n", p, subhead->textureID[p]);
+	}
 }
