@@ -13,4 +13,5 @@ void printFileIndexHead(FileIndexHead *header);
 void printFileIndex(FileIndex *index);
 void printMeshSHead(MeshSHead *subhead);
 void printTexSHead(TexSHead *subhead);
+void printFileNames(BigFile *bigFile);
 #endif //RUNE_DEBUG_H

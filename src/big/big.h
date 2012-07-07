@@ -121,6 +121,7 @@ typedef struct {
 
 typedef struct {
 	char *filename;
+	FILE *file;
 
 	Head header;
 
@@ -131,6 +132,7 @@ typedef struct {
 //-- Function Prototypes --//
 BigFile* readBigFile(char* filename);
 short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace);
+short exportBank(BigFile *bigFile, short bank, short replace);
 void saveBigFile(char* filename, BigFile file);
 void destroyBigFile(BigFile *bigfile);
 

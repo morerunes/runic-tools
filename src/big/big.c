@@ -7,12 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include "big.h"
 #include "debug.h"
 #include "runeio.h"
 
-short DEBUG = 1;
+short DEBUG = 2;
 
 BigFile* readBigFile(char* filename) {
 	BigFile *bigfile = malloc(sizeof(BigFile));
@@ -22,7 +21,8 @@ BigFile* readBigFile(char* filename) {
 
 	//-- Begin Reading File --//
 	FILE *in = fopen(filename, "rb");
-	if (in == NULL) {
+	bigfile->file = in;
+	if (in == NULL ) {
 		perror("Error opening file!");
 		exit(EXIT_FAILURE);
 	}
@@ -37,12 +37,9 @@ BigFile* readBigFile(char* filename) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (DEBUG) {
+	if (DEBUG > 1) {
 		printHead(header);
 	}
-
-
-	bigfile->header = *header;
 
 	//Get Num Bank Headers
 	INT numBanks;
@@ -50,7 +47,7 @@ BigFile* readBigFile(char* filename) {
 	fread(&numBanks, 4, 1, in);
 	bigfile->numBanks = numBanks;
 
-	if (DEBUG) {
+	if (DEBUG > 1) {
 		printf("\nThere are %d banks.\n", bigfile->numBanks);
 	}
 
@@ -62,7 +59,7 @@ BigFile* readBigFile(char* filename) {
 		fread(&(bankheads[i].bankID), 4, 5, in);
 	}
 
-	if (DEBUG) { // Print debug info
+	if (DEBUG > 1) { // Print debug info
 		for (int i = 0; i < bigfile->numBanks; i++) {
 			printBankHead(&bankheads[i]);
 		}
@@ -78,7 +75,7 @@ BigFile* readBigFile(char* filename) {
 
 	for (int i = 0; i < bigfile->numBanks; i++) { // For every bank, read bank
 
-		if (DEBUG) {
+		if (DEBUG > 1) {
 			printf("\n-- Bank #%d --\n", i + 1);
 		}
 
@@ -96,7 +93,7 @@ BigFile* readBigFile(char* filename) {
 			numFiles += bigfile->banks[i].fileSet.header.fileTypes[j].numFiles;
 		}
 
-		if (DEBUG) {
+		if (DEBUG > 1) {
 			printFileIndexHead(&(bigfile->banks[i].fileSet.header));
 		}
 
@@ -135,20 +132,24 @@ BigFile* readBigFile(char* filename) {
 			// Read sub-header
 			fread(&(currentFile->subHeaderSize), 4, 1, in);
 
-			if (DEBUG) {
+			if (DEBUG > 1) {
 				printFileIndex(currentFile);
 			}
 
 			// Read sub-header according to dev-file type attribute
 			if (currentFile->subHeaderSize == 0) {
-				if (DEBUG) {
+				if (DEBUG > 1) {
 					printf("No Sub-Header");
 				}
 			} else if (currentFile->subHeaderSize == 4) {
-				printf("Dialogue not yet implemented, skipping...\n");
+				if (DEBUG > 0) {
+					printf("Dialogue not yet implemented, skipping...\n");
+				}
 				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
 			} else if (currentFile->subHeaderSize == 24) {
-				printf("Animations not yet implemented, skipping...\n");
+				if (DEBUG > 0) {
+					printf("Animations not yet implemented, skipping...\n");
+				}
 				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
 			} else if (currentFile->subHeaderSize > 45) {
 				//-- Read BBM Sub-Header --//
@@ -166,24 +167,24 @@ BigFile* readBigFile(char* filename) {
 				fread(currentFile->subHeader.meshSHeader.textureID, 4, currentFile->subHeader.meshSHeader.numTextures,
 						in);
 
-				if (DEBUG) {
+				if (DEBUG > 1) {
 					printMeshSHead(&(currentFile->subHeader.meshSHeader));
 				}
 			} else if (currentFile->subHeaderSize == 34) {
 				//-- Read DDS Subhead --//
 				fread(&(currentFile->subHeader.meshSHeader), 2, 17, in);
-				
-				if (DEBUG) {
+
+				if (DEBUG > 1) {
 					printTexSHead(&(currentFile->subHeader.texSHeader));
 				}
 			} else {
-				printf("Unknown file type, skipping...");
+				if (DEBUG > 0) {
+					printf("Unknown file type, skipping...");
+				}
 				fseek(in, currentFile->subHeaderSize, SEEK_CUR);
 			}
 		}
 	}
-
-	fclose(in);
 
 	return bigfile;
 }
@@ -198,70 +199,87 @@ BigFile* readBigFile(char* filename) {
 
 short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 	//-- Read Data --//
-	FILE *in = fopen(big->filename, "rb");
+//	FILE *in = fopen(big->filename, "rb");
+	FILE *in = big->file;
 
-	if (in == NULL) {
+	if (in == NULL ) {
+		in = fopen(big->filename, "rb");
+	}
+
+	if (in == NULL ) {
 		perror("Error opening file!");
 		exit(EXIT_FAILURE);
 	}
 
-	printf("Opened %s for reading\n", big->filename);
-
 	int offset = big->banks[bank].fileSet.files[fileID - 1].fileStart;
 	int size = big->banks[bank].fileSet.files[fileID - 1].fileSize;
 	char *pathname = "output";
-	char *outputFileName = malloc(strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName) + 1);
+	char *outputFileName = malloc(
+			strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName) + 1);
 	strcpy(outputFileName, pathname);
 	strcat(outputFileName, big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName);
-
-	for (int i = 0; i < strlen(outputFileName); i++) {
-		if (outputFileName[i] == '\\') {
-			outputFileName[i] = '/';
-		}
-	}
 
 	char *buffer = malloc(size);
 
 	fseek(in, offset, SEEK_SET);
 	fread(buffer, size, 1, in);
 
-	fclose(in);
-
-	printf("File Read\n");
+//	//-- Convert Pathname --//
+//	for (int i = 0; i < strlen(outputFileName); i++) {
+//		if (outputFileName[i] == '\\') {
+//			outputFileName[i] = '/';
+//		}
+//	}
 
 	//-- Write Data --//
+	fensureDir(outputFileName);
 	FILE *out = fopen(outputFileName, "rb");
 
-	printf("Writing to file %s\n", outputFileName);
-
-	if (out != NULL) {
+	if (out != NULL ) {
 		if (replace) {
-			printf("Output file exists, overwriting...");
-			fclose(out); // close, then re-open for writing
+			printf("Output file exists, overwriting...\n");
 		} else {
-			printf("The output file already exists, aborting!");
+			printf("The output file already exists, skipping...\n");
 			fclose(out);
-			return 1;
+			return 0;
 		}
-	}
-
-	out = fopen(outputFileName, "wb");
-
-	if (out == NULL) {
-		printf("IO Error! Cannot open new file for writing!");
-	}
-
-	fflush(stdout);
-
-	if (fwrite(buffer, 1, size, out) != size) {
-		printf("Error writing file!\n");
+		printf("Got File Slot...\n");
 	}
 
 	fclose(out);
 
-	printf("File Successfully Exported!");
+	out = fopen(outputFileName, "wb");
+
+	if (out == NULL ) {
+		printf("IO Error! Cannot open new file for writing!\n");
+		printf("%s\n", outputFileName);
+		fclose(out);
+		return 2;
+	}
+
+	if (fwrite(buffer, 1, size, out) != size) {
+		printf("Error writing file!\n");
+		fclose(out);
+		return 2;
+	}
+
+	fclose(out);
 
 	return 0;
+}
+
+short exportBank(BigFile *bigFile, short bank, short replace) {
+	if (bank > (bigFile->numBanks  - 1) || bank < 0) {
+		printf("Invalid Bank Specified!\n");
+		return 1;
+	} else {
+		int numFiles = bigFile->banks[bank].header.numEntries;
+		for (int i = 0; i < numFiles; i++) {
+			exportFileIndex(bigFile, bank, i, replace);
+		}
+
+		return 0;
+	}
 }
 
 void saveBigFile(char* filename, BigFile file) {

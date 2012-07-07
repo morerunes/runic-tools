@@ -53,7 +53,8 @@ void printMeshSHead(MeshSHead *subhead) {
 			subhead->bbmHead[1], subhead->bbmHead[2], subhead->bbmHead[3], subhead->bbmHead[4], subhead->bbmHead[5],
 			subhead->bbmHead[6], subhead->bbmHead[7], subhead->bbmHead[8], subhead->bbmHead[9]);
 	printf("Num LODs:\t%u\n", subhead->numLODs);
-	printf("Textures:\n");
+
+	printf("Textures:\t%u\n", subhead->numTextures);
 
 	for (int p = 0; p < subhead->numTextures; p++) {
 		printf("\t%d:\t%u\n", p, subhead->textureID[p]);
@@ -77,4 +78,23 @@ void printTexSHead(TexSHead *subhead) {
 	printf("Top MipMap Compressed Size:\t%u\n", subhead->topMipmapCompressedSize);
 	printf("DXT Again?:\t%u\n", subhead->unknown2);
 	printf("Unknown:\t%u\n", subhead->unknown3);
+}
+
+void printFileNames(BigFile *bigFile) {
+	printf("\n\n:: File Names ::\n\n");
+	for (int i = 0; i < bigFile->numBanks; i++) {
+		printf("\n%s\n\n", bigFile->banks[i].header.bankName);
+
+		// Get number of files in bank
+		int numFiles = 0;
+		for (int j = 0; j < bigFile->banks[i].fileSet.header.numFileTypes; j++) {
+			numFiles += bigFile->banks[i].fileSet.header.fileTypes[j].numFiles;
+		}
+
+		// Print the file names
+		for (int j = 0; j < numFiles; j++) {
+			FileIndex *currentFile = &(bigFile->banks[i].fileSet.files[j]);
+			printf("%4u - %s\n", currentFile->fileID, currentFile->fileName);
+		}
+	}
 }
