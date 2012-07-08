@@ -33,13 +33,13 @@ int main(int argc, char **argv)
 		BigFile *bigfile = readBigFile(filename);
 
 		if (exportall) {
-//			for (int i = 0; i < bigfile->numBanks; i++) {
-//				exportBank(bigfile, i, replace);
-//			}
-
-			for (int x = 1; x <= 10; x++) {
-				exportFileIndex(bigfile, 0, x, 1);
+			for (int i = 0; i < bigfile->numBanks; i++) {
+				exportBank(bigfile, i, replace);
 			}
+
+//			for (int x = 1; x <= 400; x++) {
+//				exportFileIndex(bigfile, 0, x, 1);
+//			}
 		}
 
 		fclose(bigfile->file);

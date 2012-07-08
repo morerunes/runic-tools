@@ -22,49 +22,25 @@ void freadNTS(char *str, int num, FILE *stream) {
 
 //-- fensureDir: ensures a directory structure from a filename exists --//
 short fensureDir(char *filename) {
-	char *newName = calloc(strlen(filename) + 1, 1);
-	strcpy(newName, filename);
+	// Copy only pathname, don't copy the filename+extension
+	// i.e. - 'C:\hey\yo.bmp' -> 'C:\hey\'
+	char *filenameCopy = malloc((strrchr(filename, '\\') - filename) + 2);
+	strncpy(filenameCopy, filename, (strrchr(filename, '\\') - filename + 1));
+	filenameCopy[(strrchr(filename, '\\') - filename + 1)] = '\0';
+	printf("Creating %s...\n", filenameCopy);
 
-	char *lastSlash = strrchr(newName, '/');
-
-	if (lastSlash == NULL) {
-		lastSlash = strrchr(newName, '\\');
-	}
-
-	if (lastSlash == NULL) {
-		printf("Error! Not a pathname?\n");
-		return 1;
-	}
-
-	*(lastSlash + 1) = '\0';
-
-	char *cmd = calloc(FILENAME_MAX, 1);
-	char *fullpath = calloc(FILENAME_MAX, 1);
-	_fullpath(fullpath, newName, FILENAME_MAX);
-
-	char *tmp = calloc(strlen(fullpath) + 1, 1);
-	strcpy(tmp, fullpath);
-	strcat(tmp, "tmp");
-	FILE *tmpFile = fopen(tmp, "w");
-	if (tmpFile == NULL) {
-		free(tmp);
-	} else {
-		fclose(tmpFile);
-		remove(tmp);
+	// Attempt to open file here to see if dir exists
+	FILE *tmpFile = fopen(filename, "w");
+	if (tmpFile == NULL) { // Create Directory
+		char *cmd = malloc(strlen(filenameCopy) + 9);
+		sprintf(cmd, "mkdir \"%s\"", filenameCopy);
+		system(cmd);
 		free(cmd);
-		free(newName);
-		free(fullpath);
-		free(tmp);
+		free(filenameCopy);
+		return 0;
+	} else { // Directory already exists
+		fclose(tmpFile);
+		free(filenameCopy);
 		return 0;
 	}
-
-	sprintf(cmd, "mkdir %s", fullpath);
-
-	system(cmd);
-
-	free(cmd);
-	free(newName);
-	free(fullpath);
-
-	return 0;
 }

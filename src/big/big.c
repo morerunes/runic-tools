@@ -11,7 +11,7 @@
 #include "debug.h"
 #include "runeio.h"
 
-short DEBUG = 2;
+short DEBUG = 0;
 
 BigFile* readBigFile(char* filename) {
 	BigFile *bigfile = malloc(sizeof(BigFile));
@@ -20,6 +20,7 @@ BigFile* readBigFile(char* filename) {
 	bigfile->filename = filename;
 
 	//-- Begin Reading File --//
+	printf("Opening File...\n");
 	FILE *in = fopen(filename, "rb");
 	bigfile->file = in;
 	if (in == NULL ) {
@@ -32,7 +33,8 @@ BigFile* readBigFile(char* filename) {
 
 	if ((header->bigb[0] != 'B') && (header->bigb[1] != 'I') && (header->bigb[2] != 'G') && (header->bigb[3] != 'B')) {
 		printf("File is not a BIGB file, exiting!");
-		free(header);
+		free(bigfile);
+		printf("Closing File...\n");
 		fclose(in);
 		exit(EXIT_FAILURE);
 	}
@@ -203,6 +205,7 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 	FILE *in = big->file;
 
 	if (in == NULL ) {
+		printf("File didn't exist, retrying...\n");
 		in = fopen(big->filename, "rb");
 	}
 
@@ -214,12 +217,22 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 	int offset = big->banks[bank].fileSet.files[fileID - 1].fileStart;
 	int size = big->banks[bank].fileSet.files[fileID - 1].fileSize;
 	char *pathname = "output";
-	char *outputFileName = malloc(
-			strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName) + 1);
-	strcpy(outputFileName, pathname);
-	strcat(outputFileName, big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName);
 
-	char *buffer = malloc(size);
+	char *outputFileName;
+	if (big->banks[bank].fileSet.files[fileID - 1].numSrcFiles != 0) {
+		outputFileName = calloc(
+			strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName) + 1, 1);
+		strcpy(outputFileName, pathname);
+		strcat(outputFileName, big->banks[bank].fileSet.files[fileID - 1].devFiles[0].srcName);
+	} else {
+		outputFileName = calloc(
+			strlen(pathname) + strlen(big->banks[bank].fileSet.files[fileID - 1].fileName) + 2, 1);
+			strcpy(outputFileName, pathname);
+			strcat(outputFileName, "\\");
+			strcat(outputFileName, big->banks[bank].fileSet.files[fileID - 1].fileName);
+	}
+
+	char *buffer = calloc(size, 1);
 
 	fseek(in, offset, SEEK_SET);
 	fread(buffer, size, 1, in);
@@ -243,7 +256,6 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 			fclose(out);
 			return 0;
 		}
-		printf("Got File Slot...\n");
 	}
 
 	fclose(out);
@@ -253,28 +265,34 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 	if (out == NULL ) {
 		printf("IO Error! Cannot open new file for writing!\n");
 		printf("%s\n", outputFileName);
-		fclose(out);
 		return 2;
 	}
 
 	if (fwrite(buffer, 1, size, out) != size) {
 		printf("Error writing file!\n");
+		free(buffer);
+		free(outputFileName);
 		fclose(out);
+		rewind(in);
 		return 2;
 	}
 
+	free(buffer);
+	free(outputFileName);
 	fclose(out);
+
+	rewind(in);
 
 	return 0;
 }
 
 short exportBank(BigFile *bigFile, short bank, short replace) {
-	if (bank > (bigFile->numBanks  - 1) || bank < 0) {
+	if (bank > (bigFile->numBanks - 1) || bank < 0) {
 		printf("Invalid Bank Specified!\n");
 		return 1;
 	} else {
 		int numFiles = bigFile->banks[bank].header.numEntries;
-		for (int i = 0; i < numFiles; i++) {
+		for (int i = 1; i <= numFiles; i++) {
 			exportFileIndex(bigFile, bank, i, replace);
 		}
 
