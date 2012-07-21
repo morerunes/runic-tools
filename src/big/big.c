@@ -20,7 +20,6 @@ BigFile* readBigFile(char* filename) {
 	bigfile->filename = filename;
 
 	//-- Begin Reading File --//
-	printf("Opening File...\n");
 	FILE *in = fopen(filename, "rb");
 	bigfile->file = in;
 	if (in == NULL ) {
@@ -244,15 +243,34 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 //		}
 //	}
 
+	//-- Detect File Type --//
+	int isText = 0;
+
+	if (big->banks[bank].fileSet.files[fileID - 1].subHeaderSize == 4) {
+		// This is probably dialogue or text, assume this is text for now
+		// This means you should not try to export dialogue.big!
+		// DON'T DO IT
+
+		isText = 1;
+	}
+
+	//-- Detect if it is a 'group' text object --//
+	if (big->banks[bank].fileSet.files[fileID - 1].fileType == 1) {
+		free(outputFileName);
+
+		return 0;
+	}
+
 	//-- Write Data --//
 	fensureDir(outputFileName);
 	FILE *out = fopen(outputFileName, "rb");
 
 	if (out != NULL ) {
 		if (replace) {
-			printf("Output file exists, overwriting...\n");
+			//printf("Output file exists, overwriting...\n");
 		} else {
 			printf("The output file already exists, skipping...\n");
+			free(outputFileName);
 			fclose(out);
 			return 0;
 		}
@@ -260,30 +278,75 @@ short exportFileIndex(BigFile *big, INT bank, INT fileID, short replace) {
 
 	fclose(out);
 
-	out = fopen(outputFileName, "wb");
+	if (!isText) {
+		out = fopen(outputFileName, "wb");
 
-	if (out == NULL ) {
-		printf("IO Error! Cannot open new file for writing!\n");
-		printf("%s\n", outputFileName);
-		return 2;
-	}
+		if (out == NULL ) {
+			printf("IO Error! Cannot open new file for writing!\n");
+			printf("%s\n", outputFileName);
+			return 2;
+		}
 
-	if (fwrite(buffer, 1, size, out) != size) {
-		printf("Error writing file!\n");
+		if (fwrite(buffer, 1, size, out) != size) {
+			printf("Error writing file!\n");
+			free(buffer);
+			free(outputFileName);
+			fclose(out);
+			rewind(in);
+			return 2;
+		}
+
 		free(buffer);
 		free(outputFileName);
 		fclose(out);
+
 		rewind(in);
-		return 2;
+
+		return 0;
+	} else {
+		out = fopen(outputFileName, "wt");
+
+		if (out == NULL ) {
+			printf("IO Error! Cannot open new file for writing!\n");
+			printf("%s\n", outputFileName);
+			return 2;
+		}
+
+		//-- Detect if there is text to output --//
+		if (buffer[0] == 32) {
+			// There's no text in this one
+			free(buffer);
+			free(outputFileName);
+			fclose(out);
+
+			rewind(in);
+
+			return 0;
+		}
+
+		for (int i = 0; i < size; i++) {
+			if (buffer[i] == '\0' && buffer[i+1] == '\0') {
+				if (fwrite(buffer, 1, i+1, out) != i+1) {
+					printf("Error writing file!\n");
+					free(buffer);
+					free(outputFileName);
+					fclose(out);
+					rewind(in);
+					return 2;
+				}
+
+				break;
+			}
+		}
+
+		free(buffer);
+		free(outputFileName);
+		fclose(out);
+
+		rewind(in);
+
+		return 0;
 	}
-
-	free(buffer);
-	free(outputFileName);
-	fclose(out);
-
-	rewind(in);
-
-	return 0;
 }
 
 short exportBank(BigFile *bigFile, short bank, short replace) {
