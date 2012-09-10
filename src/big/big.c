@@ -30,7 +30,8 @@ BigFile* readBigFile(char* filename) {
 	//Read Header
 	fread(header, 4, 4, in);
 
-	if ((header->bigb[0] != 'B') && (header->bigb[1] != 'I') && (header->bigb[2] != 'G') && (header->bigb[3] != 'B')) {
+	//Magic Number Test
+	if (header->bigb != 1111968066) {
 		printf("File is not a BIGB file, exiting!");
 		free(bigfile);
 		printf("Closing File...\n");
@@ -354,13 +355,22 @@ short exportBank(BigFile *bigFile, short bank, short replace) {
 		printf("Invalid Bank Specified!\n");
 		return 1;
 	} else {
-		int numFiles = bigFile->banks[bank].header.numEntries;
-		for (int i = 1; i <= numFiles; i++) {
-			exportFileIndex(bigFile, bank, i, replace);
+		// Detect if text.big
+		if (bigFile->banks[bank].fileSet.files[100].subHeaderSize == 4) {
+			exportTextBank(bigFile, bank, replace);
+		} else {
+			int numFiles = bigFile->banks[bank].header.numEntries;
+			for (int i = 1; i <= numFiles; i++) {
+				exportFileIndex(bigFile, bank, i, replace);
+			}
 		}
 
 		return 0;
 	}
+}
+
+void exportTextBank(BigFile *bigFile, short bank, short replace) {
+
 }
 
 void saveBigFile(char* filename, BigFile file) {

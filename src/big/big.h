@@ -16,7 +16,7 @@ typedef uint16_t SHORT;
 typedef uint8_t CHAR;
 
 typedef struct {
-	CHAR bigb[4];
+	INT bigb;
 	INT version;
 	INT bankHeadOffset;
 	INT unknown;
@@ -72,6 +72,7 @@ typedef struct {
 typedef union {
 	MeshSHead meshSHeader;
 	TexSHead texSHeader;
+	short isMesh; //TODO
 } Subhead;
 
 typedef struct {

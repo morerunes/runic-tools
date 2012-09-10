@@ -6,8 +6,7 @@
 #include "big.h"
 void printHead(Head *header) {
 	printf("Header:\t\t\t");
-	printf("%c%c%c%c\nVersion:\t\t%u\nBank Headers Offset:\t%u\nUnknown:\t\t%u\n", header->bigb[0], header->bigb[1],
-			header->bigb[2], header->bigb[3], header->version, header->bankHeadOffset, header->unknown);
+	printf("%u\nVersion:\t\t%u\nBank Headers Offset:\t%u\nUnknown:\t\t%u\n", header->bigb, header->version, header->bankHeadOffset, header->unknown);
 }
 
 void printBankHead(BankHead *header) {

@@ -8,4 +8,5 @@
 #include "big.h"
 void freadNTS(char *str, int num, FILE *stream);
 short fensureDir(char *filename);
+FILE* fsafeOpenForWrite(char *filename, short overwrite);
 #endif // RUNEIO_H_INCLUDED
